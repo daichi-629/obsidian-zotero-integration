@@ -1,4 +1,10 @@
-import { App, Notice, PluginSettingTab, debounce } from 'obsidian';
+import {
+  App,
+  Notice,
+  PluginSettingTab,
+  SecretComponent,
+  debounce,
+} from 'obsidian';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import which from 'which';
@@ -16,6 +22,7 @@ import { Icon } from './Icon';
 import { SettingItem } from './SettingItem';
 
 interface SettingsComponentProps {
+  app: App;
   settings: ZoteroConnectorSettings;
   addCiteFormat: (format: CitationFormat) => CitationFormat[];
   updateCiteFormat: (index: number, format: CitationFormat) => CitationFormat[];
@@ -27,6 +34,7 @@ interface SettingsComponentProps {
 }
 
 function SettingsComponent({
+  app,
   settings,
   addCiteFormat,
   updateCiteFormat,
@@ -50,6 +58,13 @@ function SettingsComponent({
   const [ocrState, setOCRState] = React.useState(settings.pdfExportImageOCR);
 
   const [concat, setConcat] = React.useState(!!settings.shouldConcat);
+
+  const [webApiEnabledState, setWebApiEnabledState] = React.useState(
+    !!settings.webApiEnabled
+  );
+  const [webApiLibraryTypeState, setWebApiLibraryTypeState] = React.useState(
+    settings.webApiLibraryType ?? 'user'
+  );
 
   const updateCite = React.useCallback(
     debounce(
@@ -109,10 +124,24 @@ function SettingsComponent({
 
   const tessPathRef = React.useRef<HTMLInputElement>(null);
   const tessDataPathRef = React.useRef<HTMLInputElement>(null);
+  const webApiKeyRef = React.useRef<HTMLDivElement>(null);
 
   const [useCustomPort, setUseCustomPort] = React.useState(
     settings.database === 'Custom'
   );
+
+  React.useEffect(() => {
+    const container = webApiKeyRef.current;
+    if (!container) return;
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+    new SecretComponent(app, container)
+      .setValue(settings.webApiKey ?? '')
+      .onChange((value) => {
+        updateSetting('webApiKey', value);
+      });
+  }, [app, settings.webApiKey, updateSetting]);
 
   return (
     <div>
@@ -221,6 +250,76 @@ function SettingsComponent({
           }}
           className={`checkbox-container${concat ? ' is-enabled' : ''}`}
         />
+      </SettingItem>
+
+      <SettingItem name="Web API Settings" isHeading />
+      <SettingItem
+        name="Enable Web API (additional mode)"
+        description="When enabled, Web API features can be used in addition to the local desktop connector."
+      >
+        <div
+          onClick={() => {
+            setWebApiEnabledState((state) => {
+              updateSetting('webApiEnabled', !state);
+              return !state;
+            });
+          }}
+          className={`checkbox-container${
+            webApiEnabledState ? ' is-enabled' : ''
+          }`}
+        />
+      </SettingItem>
+      <SettingItem name="Library type">
+        <select
+          className="dropdown"
+          defaultValue={webApiLibraryTypeState}
+          onChange={(e) => {
+            const value = (e.target as HTMLSelectElement).value;
+            const typedValue = value === 'group' ? 'group' : 'user';
+            setWebApiLibraryTypeState(typedValue);
+            updateSetting('webApiLibraryType', typedValue);
+          }}
+        >
+          <option value="user">User</option>
+          <option value="group">Group</option>
+        </select>
+      </SettingItem>
+      {webApiLibraryTypeState === 'user' ? (
+        <SettingItem name="User ID">
+          <input
+            onChange={(e) =>
+              updateSetting(
+                'webApiUserId',
+                (e.target as HTMLInputElement).value
+              )
+            }
+            type="text"
+            spellCheck={false}
+            placeholder="Example: 1234567"
+            defaultValue={settings.webApiUserId}
+          />
+        </SettingItem>
+      ) : (
+        <SettingItem name="Group ID">
+          <input
+            onChange={(e) =>
+              updateSetting(
+                'webApiGroupId',
+                (e.target as HTMLInputElement).value
+              )
+            }
+            type="text"
+            spellCheck={false}
+            placeholder="Example: 1234567"
+            defaultValue={settings.webApiGroupId}
+          />
+        </SettingItem>
+      )}
+      <SettingItem
+        name="API key"
+        description="Select a secret from SecretStorage."
+      >
+        <div ref={webApiKeyRef} />
       </SettingItem>
       <SettingItem name="Citation Formats" isHeading />
       <SettingItem>
@@ -475,6 +574,7 @@ export class ZoteroConnectorSettingsTab extends PluginSettingTab {
   display() {
     ReactDOM.render(
       <SettingsComponent
+        app={this.app}
         settings={this.plugin.settings}
         addCiteFormat={this.addCiteFormat}
         updateCiteFormat={this.updateCiteFormat}
