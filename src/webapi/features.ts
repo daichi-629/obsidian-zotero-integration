@@ -2,6 +2,7 @@ import { moment } from 'obsidian';
 
 import { processZoteroAnnotationNotes } from '../bbt/exportNotes';
 import { CiteKeyExport, ZoteroConnectorSettings } from '../types';
+import { buildCollectionsWithFullPath } from './collections';
 import { WebApiClient } from './WebApiClient';
 import {
   getCslStyleFromSettings,
@@ -45,7 +46,6 @@ export async function webApiSearchItems(
 
   const items = res.getData?.() ?? [];
   const list = Array.isArray(items) ? items : [items];
-  console.log('Web API search results:', list);
 
   return list.map((item) => {
     const data = (item as any).data ?? item ?? {};
@@ -86,6 +86,25 @@ export async function webApiGetItem(
   if (!item) return null;
 
   const data = (item as any).data ?? item ?? {};
+  const rawData = (res as any).raw?.data ?? {};
+  if (!data.citationKey && rawData.citationKey) {
+    data.citationKey = rawData.citationKey;
+  }
+  if (!data['citation-key'] && rawData['citation-key']) {
+    data['citation-key'] = rawData['citation-key'];
+  }
+  const collectionKeys =
+    rawData.collections ?? data.collections ?? [];
+  if (Array.isArray(collectionKeys) && collectionKeys.length > 0) {
+    try {
+      data.collections = await buildCollectionsWithFullPath(
+        client,
+        collectionKeys
+      );
+    } catch (e) {
+      console.error('Failed to resolve web API collections:', e);
+    }
+  }
   return {
     key: item.key ?? data.key,
     data,

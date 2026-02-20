@@ -8,6 +8,7 @@ import { PersistExtension } from './bbt/template.env';
 import { sanitizeObsidianPath } from './bbt/template.helpers';
 import ZoteroConnector from './main';
 import { ExportFormat, ExportToMarkdownParams } from './types';
+import { dataExplorerWebApiPrompt } from './webapi/commands';
 
 export const viewType = 'zdc-debug';
 
@@ -167,11 +168,25 @@ function DataExporer({ plugin }: { plugin: ZoteroConnector }) {
     });
   }, []);
 
+  const promptForWebApiSelection = React.useCallback(() => {
+    dataExplorerWebApiPrompt(plugin.app, plugin.settings).then((res) => {
+      if (!res || res.length === 0) {
+        setError('No data retrieved');
+      } else {
+        setError(null);
+        setData(res[0]);
+      }
+    });
+  }, []);
+
   return (
     <div className="zt-json-viewer">
       <div className="zt-json-viewer__btns">
         <div>
           <button onClick={promptForSelection}>Prompt For Selection</button>
+          <button onClick={promptForWebApiSelection}>
+            Prompt For Selection (Web API)
+          </button>
         </div>
         <div>
           <select

@@ -53,14 +53,16 @@ async function buildWebApiTemplateData(
   lastImportDate: moment.Moment
 ) {
   const data = detail.data ?? {};
+  const citekey =
+    data.citationKey || data['citation-key'] || detail.key;
   const uri = buildWebApiItemUri(settings, detail.key);
   const item = {
     ...data,
     key: detail.key,
     itemKey: detail.key,
     uri,
-    citekey: detail.key,
-    citationKey: detail.key,
+    citekey,
+    citationKey: citekey,
     desktopURI: getLocalURI('select', uri),
     select: getLocalURI('select', uri),
     attachments: [],
@@ -128,7 +130,6 @@ export async function runWebApiImport(
     modalOpen = false;
 
     const resolvedFormat = resolveWebApiImportFormat(settings, format);
-    console.log('Resolved import format:', resolvedFormat);
     if (!resolvedFormat) {
       new Notice('No import format found. Add an Export Format first.');
       return;
@@ -139,7 +140,6 @@ export async function runWebApiImport(
       'Select items to import',
       filtered
     );
-    console.log('Selected item:', selected);
 
     const detail = await webApiGetItem(client, settings, selected.key);
     if (!detail) {
@@ -239,4 +239,87 @@ export async function runWebApiSearchTest(
   settings: ZoteroConnectorSettings
 ) {
   return runWebApiImport(app, settings);
+}
+
+export async function dataExplorerWebApiPrompt(
+  app: App,
+  settings: ZoteroConnectorSettings
+) {
+  if (!settings.webApiEnabled) {
+    new Notice('Web API is disabled. Enable it in settings first.');
+    return null;
+  }
+
+  if (
+    (settings.webApiLibraryType === 'user' && !settings.webApiUserId) ||
+    (settings.webApiLibraryType === 'group' && !settings.webApiGroupId)
+  ) {
+    new Notice('Web API library ID is missing in settings.');
+    return null;
+  }
+
+  const term = await promptForText(
+    app,
+    'Search Zotero Web API',
+    'Enter search term'
+  );
+  if (!term) return null;
+
+  const apiKey = getWebApiKey(app, settings);
+  if (!apiKey) {
+    new Notice('Web API key is not set.');
+    return null;
+  }
+
+  const client = buildWebApiClient(apiKey, settings);
+  const modal = new LoadingModal(app, 'Searching Zotero Web API...');
+  let modalOpen = true;
+  modal.open();
+
+  try {
+    const results = await webApiSearchItems(client, settings, term);
+    const filtered = results.filter((item) => item.itemType !== 'attachment');
+    if (!filtered.length) {
+      new Notice('No items found.');
+      return null;
+    }
+
+    modal.close();
+    modalOpen = false;
+
+    const selected = await promptForWebApiItemSelection(
+      app,
+      'Select item to preview',
+      filtered
+    );
+
+    const detail = await webApiGetItem(client, settings, selected.key);
+    if (!detail) {
+      new Notice('Failed to fetch selected item.');
+      return null;
+    }
+
+    const notes = await webApiGetNotes(client, detail.key, true);
+    const templateData = await buildWebApiTemplateData(
+      '',
+      detail,
+      settings,
+      notes,
+      moment(0)
+    );
+
+    return [templateData];
+  } catch (e) {
+    if (e instanceof Error && e.message === 'Selection cancelled.') {
+      return null;
+    }
+    console.error(e);
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    new Notice(`Web API search failed: ${message}`, 10000);
+    return null;
+  } finally {
+    if (modalOpen) {
+      modal.close();
+    }
+  }
 }
