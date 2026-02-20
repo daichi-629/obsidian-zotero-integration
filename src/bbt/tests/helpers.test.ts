@@ -25,7 +25,7 @@ describe('mkMDDir()', () => {
 
     await mkMDDir('mock');
 
-    expect(global.app.vault.createFolder as jest.Mock).not.toBeCalled();
+    expect(global.app.vault.createFolder as jest.Mock).not.toHaveBeenCalled();
   });
 
   it('does call createFolder if path exists', async () => {
@@ -40,7 +40,7 @@ describe('mkMDDir()', () => {
 
     await mkMDDir('mock');
 
-    expect(global.app.vault.createFolder as jest.Mock).toBeCalled();
+    expect(global.app.vault.createFolder as jest.Mock).toHaveBeenCalled();
   });
 });
 

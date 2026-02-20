@@ -279,7 +279,6 @@ hello
 %% begin hello %%
 
 hello
-
 one
 %% end hello %%
     `.trim();
@@ -390,7 +389,7 @@ describe('class ObsidianMarkdownLoader', () => {
     env.renderString(template, {}, (err, res) => {
       expect(err).toBeNull();
       expect(res).toBe(expected);
-      expect(getFirstFn).toBeCalledWith('hello', 'world');
+      expect(getFirstFn).toHaveBeenCalledWith('hello', 'world');
       done();
     });
   });
