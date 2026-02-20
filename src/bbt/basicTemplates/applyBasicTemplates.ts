@@ -134,10 +134,26 @@ export async function applyBasicTemplates(
   }
 
   if (itemData.tags?.length) {
-    itemData.allTags = itemData.tags.map((t: any) => t.tag).join(', ');
-    itemData.hashTags = itemData.tags
-      .map((t: any) => `#${t.tag.replace(/\s+/g, '-')}`)
-      .join(', ');
+    const normalizedTags = itemData.tags
+      .map((t: any) => {
+        if (typeof t === 'string') {
+          const tag = t.trim();
+          return tag ? { tag } : null;
+        }
+
+        const tag = (t?.tag ?? '').toString().trim();
+        if (!tag) return null;
+        return { ...t, tag };
+      })
+      .filter(Boolean);
+
+    if (normalizedTags.length) {
+      itemData.tags = normalizedTags;
+      itemData.allTags = normalizedTags.map((t: any) => t.tag).join(', ');
+      itemData.hashTags = normalizedTags
+        .map((t: any) => `#${t.tag.replace(/\s+/g, '-')}`)
+        .join(', ');
+    }
   }
 
   if (itemData.annotations?.length) {

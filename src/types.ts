@@ -26,6 +26,8 @@ export type NotesToOpenAfterImport =
   | 'last-imported-note'
   | 'all-imported-notes';
 
+export type WebApiLibraryType = 'user' | 'group';
+
 export interface CalloutDef {
   type: string;
   prefix: string;
@@ -91,6 +93,11 @@ export interface ZoteroConnectorSettings {
   settingsVersion?: number;
   shouldConcat?: boolean;
   whichNotesToOpenAfterImport: NotesToOpenAfterImport;
+  webApiEnabled?: boolean;
+  webApiLibraryType?: WebApiLibraryType;
+  webApiUserId?: string;
+  webApiGroupId?: string;
+  webApiKey?: string;
 }
 
 export interface CiteKeyExport {

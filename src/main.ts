@@ -1,5 +1,5 @@
 import Fuse from 'fuse.js';
-import { EditableFileView, Events, Plugin, TFile } from 'obsidian';
+import { EditableFileView, Events, Notice, Plugin, TFile } from 'obsidian';
 import { shellPath } from 'shell-path';
 
 import { DataExplorerView, viewType } from './DataExplorerView';
@@ -9,6 +9,7 @@ import { exportToMarkdown, renderCiteTemplate } from './bbt/export';
 import {
   filesFromNotes,
   insertNotesIntoCurrentDoc,
+  newFile,
   noteExportPrompt,
 } from './bbt/exportNotes';
 import './bbt/template.helpers';
@@ -24,10 +25,12 @@ import {
   ExportFormat,
   ZoteroConnectorSettings,
 } from './types';
+import { runWebApiImport, runWebApiSearchTest } from './webapi/commands';
 
 const commandPrefix = 'obsidian-zotero-desktop-connector:';
 const citationCommandIDPrefix = 'zdc-';
 const exportCommandIDPrefix = 'zdc-exp-';
+const webApiImportCommandIDPrefix = 'zdc-webapi-imp-';
 const DEFAULT_SETTINGS: ZoteroConnectorSettings = {
   database: 'Zotero',
   noteImportFolder: '',
@@ -39,6 +42,11 @@ const DEFAULT_SETTINGS: ZoteroConnectorSettings = {
   citeSuggestTemplate: '[[{{citekey}}]]',
   openNoteAfterImport: false,
   whichNotesToOpenAfterImport: 'first-imported-note',
+  webApiEnabled: false,
+  webApiLibraryType: 'user',
+  webApiUserId: '',
+  webApiGroupId: '',
+  webApiKey: '',
 };
 
 async function fixPath() {
@@ -129,6 +137,14 @@ export default class ZoteroConnector extends Plugin {
       },
     });
 
+    this.addCommand({
+      id: 'zdc-webapi-search-test',
+      name: 'Web API: Search items (test)',
+      callback: () => {
+        runWebApiSearchTest(this.app, this.settings);
+      },
+    });
+
     this.registerEvent(
       this.app.vault.on('modify', (file) => {
         if (file instanceof TFile) {
@@ -207,11 +223,22 @@ export default class ZoteroConnector extends Plugin {
         );
       },
     });
+
+    this.addCommand({
+      id: `${webApiImportCommandIDPrefix}${format.name}`,
+      name: `Import (Web API) ${format.name}`,
+      callback: () => {
+        runWebApiImport(this.app, this.settings, format);
+      },
+    });
   }
 
   removeExportCommand(format: ExportFormat) {
     (this.app as any).commands.removeCommand(
       `${commandPrefix}${exportCommandIDPrefix}${format.name}`
+    );
+    (this.app as any).commands.removeCommand(
+      `${commandPrefix}${webApiImportCommandIDPrefix}${format.name}`
     );
   }
 
@@ -341,4 +368,5 @@ export default class ZoteroConnector extends Plugin {
       modal.close();
     }
   }
+
 }
