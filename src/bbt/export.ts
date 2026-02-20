@@ -137,7 +137,7 @@ function convertNativeAnnotation(
 
   if (annotation.annotationPosition) {
     if (annotation.annotationPosition.pageIndex) {
-      annot.page = annotation.annotationPosition.pageIndex + 1
+      annot.page = annotation.annotationPosition.pageIndex + 1;
     }
 
     if (annotation.annotationPosition.rects) {
@@ -579,9 +579,7 @@ async function getTemplateData(
   item: any,
   lastImportDate: moment.Moment
 ) {
-  const firstAnnots = item.attachments.find(
-    (a: any) => a.annotations?.length
-  );
+  const firstAnnots = item.attachments.find((a: any) => a.annotations?.length);
 
   item.annotations = firstAnnots?.annotations ?? [];
   item.lastImportDate = lastImportDate;

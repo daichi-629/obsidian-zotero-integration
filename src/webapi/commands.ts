@@ -53,8 +53,7 @@ async function buildWebApiTemplateData(
   lastImportDate: moment.Moment
 ) {
   const data = detail.data ?? {};
-  const citekey =
-    data.citationKey || data['citation-key'] || detail.key;
+  const citekey = data.citationKey || data['citation-key'] || detail.key;
   const uri = buildWebApiItemUri(settings, detail.key);
   const item = {
     ...data,
@@ -176,9 +175,7 @@ export async function runWebApiImport(
         )
       )
     );
-    const existingFile = app.vault.getAbstractFileByPath(
-      markdownPath
-    ) as TFile;
+    const existingFile = app.vault.getAbstractFileByPath(markdownPath) as TFile;
     const existingContent = existingFile
       ? await app.vault.read(existingFile)
       : '';

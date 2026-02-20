@@ -4,10 +4,7 @@ import { processZoteroAnnotationNotes } from '../bbt/exportNotes';
 import { CiteKeyExport, ZoteroConnectorSettings } from '../types';
 import { buildCollectionsWithFullPath } from './collections';
 import { WebApiClient } from './WebApiClient';
-import {
-  getCslStyleFromSettings,
-  htmlToMarkdownSafe,
-} from './helpers';
+import { getCslStyleFromSettings, htmlToMarkdownSafe } from './helpers';
 
 type WebApiItem = {
   key: string;
@@ -34,15 +31,12 @@ export async function webApiSearchItems(
   term: string
 ) {
   const style = getCslStyleFromSettings(settings);
-  const res = await client
-    .getLibraryApi()
-    .items()
-    .get({
-      q: term,
-      limit: 25,
-      include: 'data,citation,bib',
-      style,
-    });
+  const res = await client.getLibraryApi().items().get({
+    q: term,
+    limit: 25,
+    include: 'data,citation,bib',
+    style,
+  });
 
   const items = res.getData?.() ?? [];
   const list = Array.isArray(items) ? items : [items];
@@ -74,13 +68,10 @@ export async function webApiGetItem(
   itemKey: string
 ) {
   const style = getCslStyleFromSettings(settings);
-  const res = await client
-    .getLibraryApi()
-    .items(itemKey)
-    .get({
-      include: 'data,citation,bib',
-      style,
-    });
+  const res = await client.getLibraryApi().items(itemKey).get({
+    include: 'data,citation,bib',
+    style,
+  });
 
   const item = res.getData?.();
   if (!item) return null;
@@ -93,8 +84,7 @@ export async function webApiGetItem(
   if (!data['citation-key'] && rawData['citation-key']) {
     data['citation-key'] = rawData['citation-key'];
   }
-  const collectionKeys =
-    rawData.collections ?? data.collections ?? [];
+  const collectionKeys = rawData.collections ?? data.collections ?? [];
   if (Array.isArray(collectionKeys) && collectionKeys.length > 0) {
     try {
       data.collections = await buildCollectionsWithFullPath(
@@ -117,13 +107,9 @@ export async function webApiGetItemChildren(
   client: WebApiClient,
   itemKey: string
 ) {
-  const res = await client
-    .getLibraryApi()
-    .items(itemKey)
-    .children()
-    .get({
-      include: 'data',
-    });
+  const res = await client.getLibraryApi().items(itemKey).children().get({
+    include: 'data',
+  });
 
   const items = res.getData?.() ?? [];
   const list = Array.isArray(items) ? items : [items];
@@ -147,13 +133,9 @@ export async function webApiGetNotes(
   itemKey: string,
   linkify: boolean
 ) {
-  const res = await client
-    .getLibraryApi()
-    .items(itemKey)
-    .children()
-    .get({
-      include: 'data',
-    });
+  const res = await client.getLibraryApi().items(itemKey).children().get({
+    include: 'data',
+  });
 
   const items = res.getData?.() ?? [];
   const list = Array.isArray(items) ? items : [items];
@@ -190,13 +172,10 @@ export async function webApiGetCitationAndBib(
   itemKey: string
 ) {
   const style = getCslStyleFromSettings(settings);
-  const res = await client
-    .getLibraryApi()
-    .items(itemKey)
-    .get({
-      include: 'citation,bib',
-      style,
-    });
+  const res = await client.getLibraryApi().items(itemKey).get({
+    include: 'citation,bib',
+    style,
+  });
 
   const item = res.getData?.();
   return {
@@ -247,10 +226,7 @@ export async function webApiValidateSettings(
   }
 }
 
-export function buildWebApiItemNote(
-  item: WebApiItem,
-  includeMeta: boolean
-) {
+export function buildWebApiItemNote(item: WebApiItem, includeMeta: boolean) {
   const data = item.data ?? {};
   const meta = item.meta ?? {};
 
@@ -267,7 +243,9 @@ export function buildWebApiItemNote(
   if (data.creators?.length) {
     lines.push(
       `- creators: ${data.creators
-        .map((c: any) => `${c.lastName || ''}${c.firstName ? `, ${c.firstName}` : ''}`.trim())
+        .map((c: any) =>
+          `${c.lastName || ''}${c.firstName ? `, ${c.firstName}` : ''}`.trim()
+        )
         .filter(Boolean)
         .join('; ')}`
     );
@@ -280,7 +258,9 @@ export function buildWebApiItemNote(
       lines.push(`- added: ${moment(meta.dateAdded).format('YYYY-MM-DD')}`);
     }
     if (meta.dateModified) {
-      lines.push(`- modified: ${moment(meta.dateModified).format('YYYY-MM-DD')}`);
+      lines.push(
+        `- modified: ${moment(meta.dateModified).format('YYYY-MM-DD')}`
+      );
     }
   }
   return lines.join('\n');

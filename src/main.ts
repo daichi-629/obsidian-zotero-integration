@@ -368,5 +368,4 @@ export default class ZoteroConnector extends Plugin {
       modal.close();
     }
   }
-
 }

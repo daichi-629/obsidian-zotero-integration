@@ -115,7 +115,8 @@ export async function applyBasicTemplates(
   const attachmentZoteroLink = (
     await renderTemplate(sourceFile, attachmentZoteroLinkTemplate, itemData)
   ).trim();
-  if (attachmentZoteroLink) itemData.firstAttachmentZoteroLink = attachmentZoteroLink;
+  if (attachmentZoteroLink)
+    itemData.firstAttachmentZoteroLink = attachmentZoteroLink;
 
   if (itemData.notes?.length) {
     const notes = itemData.notes

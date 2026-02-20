@@ -3,11 +3,11 @@ import { App, htmlToMarkdown } from 'obsidian';
 import { ZoteroConnectorSettings } from '../types';
 import { WebApiClient } from './WebApiClient';
 
-export  function getWebApiKey(
+export function getWebApiKey(
   app: App,
   settings: ZoteroConnectorSettings
 ): string {
- return  app.secretStorage.getSecret(settings.webApiKey);
+  return app.secretStorage.getSecret(settings.webApiKey);
 }
 
 export function buildWebApiClient(
