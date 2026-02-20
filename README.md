@@ -32,3 +32,19 @@ And that you can copy a citation in Zotero when and item is selected:
 <img src="https://raw.githubusercontent.com/mgmeyers/obsidian-zotero-integration/main/screenshots/03.png" alt="A screenshot of the Zotero search bar">
 
 <img src="https://raw.githubusercontent.com/mgmeyers/obsidian-zotero-integration/main/screenshots/demo.gif" alt="A short gif demonstraiting importing notes form Zotero into the current file">
+
+## Web API (additional mode)
+
+This plugin also supports importing from the Zotero Web API (in addition to the local desktop connector). This is useful when the desktop connector is unavailable or when you want to fetch items directly from the Zotero cloud.
+
+**Setup**
+- Enable "Web API (additional mode)" in the plugin settings.
+- Choose library type (user or group) and set the corresponding library ID.
+- Set your Zotero API key in the Web API settings.
+
+**Commands**
+- "Web API: Search items (test)" — verifies your Web API settings by searching the Zotero library.
+- "Import (Web API) <format>" — imports a single item using the selected export format.
+
+**Data Explorer**
+- The Data Explorer includes a "Prompt For Selection (Web API)" button to preview the template data generated from a Web API item.
